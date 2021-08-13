@@ -3,13 +3,11 @@ var express = require('express');
 const bodyParser = require("body-parser");
 var router = express.Router();
 var TicketModel = require('./ticketschema');
-
+var cache = require('memory-cache');
+const util = require('util');
 const app = express();
-// app.use(bodyParser.urlencoded({
-//     extended: true
-//   }));
-// app.use(bodyParser.json());
 app.use(express.json());
+mongoose.set('useFindAndModify', false);
 
 
 // Connecting to database
@@ -31,7 +29,7 @@ useUnifiedTopology: true }, function(error) {
 
 //CREATE
 
-router.post('/save', function(req, res) {
+     router.post('/save', function(req, res) {
 
     var ticket = new TicketModel();
        ticket.title = req.body.title;
@@ -39,38 +37,6 @@ router.post('/save', function(req, res) {
        ticket.due = req.body.due;
        ticket.status = req.body.status;
 
-    //var newTicket = new TicketModel(req.body);
-
-    // const ticket = mongoose.model('tickets',{
-    //     title: { type: String },
-    //     desc: { type: String },
-    //     due: { type: String },
-    //     status: { type: String }
-    // });
-
-    // var newTicket = new ticket({
-    //     title: req.body.title,
-    //     desc: req.body.desc,
-    //     due: req.body.due,
-    //     status: req.body.status
-    // })
-      
-    // newTicket.save(function(err,result){
-    //     if (err){
-    //         console.log(err);
-    //     }
-    //     else{
-    //         console.log(result)
-    //     }
-    // })
-
-    // var ticket = new TicketModel({
-    //     title : "t1",
-    //     desc : "desc",
-    //     due : "d",
-    //     status : "d"
-    // });
-       
        ticket.save(function(err, data){
            if(err){
                console.log(err);
@@ -82,7 +48,7 @@ router.post('/save', function(req, res) {
      });
 
    
-    //RETRIEVE
+    //RETRIEVE ALL
     router.get('/findall', function(req, res) {
         TicketModel.find(function(err, data) {
             if(err){
@@ -93,36 +59,67 @@ router.post('/save', function(req, res) {
             }
         });  
      });
- /*
-     //UPDATE
 
-     router.post('/update', function(req, res) {
-        TicketModel.findByIdAndUpdate(req.body.id, 
-        {Name:req.body.Name}, function(err, data) {
-            if(err){
-                console.log(err);
-            }
-            else{
-                res.send(data);
-                console.log("Data updated!");
-            }
-        });  
-    });    
+     //RETRIEVE ONE
+     router.get('/find', function(req, res) {
 
-     //DELETE
-
-     router.post('/delete', function(req, res) {
-        TicketModel.findByIdAndDelete((req.body.id), 
+        TicketModel.findById((req.query.id) , 
         function(err, data) {
             if(err){
                 console.log(err);
             }
             else{
                 res.send(data);
-                console.log("Data Deleted!");
             }
         });  
     });
-*/
+
+     //UPDATE
+
+     router.post('/update', function(req, res) {
+        TicketModel.findByIdAndUpdate(req.body.id, 
+        {title:req.body.title, desc: req.body.desc, due: req.body.due, status: req.body.status}, function(err, data) {
+            if(err){
+                console.log(err);
+            }
+            else{
+                res.send(data);
+                console.log(data);
+            }
+        });  
+    });    
+
+
+    
+     //DELETE
+router.post('/delete', function(req, res) {
+    TicketModel.findByIdAndDelete((req.body.id), 
+    function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+            console.log("Data Deleted!");
+        }
+    });  
+});
+
+router.post('/cache/save', function(req, res){
+    cache.put(req.body.key, req.body.value);
+    console.log(req.body.key);
+    res.send(req.body.value);
+});
+router.post('/cache/delete', function(req, res){
+    cache.del(req.body.key);
+});
+router.get('/cache/find', function(req, res){
+    cache.get(req.body.key);
+});
+router.get('/cache/findall', function(req, res){
+    var r = cache.exportJson();
+    res.send(JSON.parse(r));
+});
+
   
 module.exports = router;

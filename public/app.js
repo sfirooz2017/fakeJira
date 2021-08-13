@@ -16,13 +16,17 @@ myApp.config(function ($routeProvider) {
         templateUrl: '/pages/tableFrag.htm',
         controller: 'AppController'
     })
-    .when('/info/:num', {
-        templateUrl: 'pages/info.htm',
+    .when('/edit/:id', {
+        templateUrl: 'pages/create.htm',
         controller: 'AppController'
     })
     .when('/create', {
         templateUrl: 'pages/create.htm',
         controller: 'AppController'
+    })
+    .when('/cache', {
+        templateUrl: 'pages/tableFrag.htm',
+        controller: 'CacheController'
     })
 
 });

@@ -2,29 +2,31 @@
   <div class="container"> 
     <div class="form-group" >
         <label >Title</label>
-        <input ng-model="title" name="title" class="form-control" placeholder="Enter Title" required> 
+        <input ng-model="ticket.title" name="title" class="form-control" placeholder="{{ticket.title || 'Title'}}" required> 
         <span class="alert alert-danger validTitle" role="alert" ng-show="titleForm.title.$touched && titleForm.title.$invalid">The name is required.</span>
       </div>
       <div class="form-group">
         <label>Description</label>
-        <input ng-model="desc" name="desc" class="form-control" placeholder="Description" required>
+        <input ng-model="ticket.desc" name="desc" class="form-control" placeholder="{{ticket.desc || 'Description'}}" required>
         <span class="alert alert-danger" role="alert" ng-show="titleForm.desc.$touched && titleForm.desc.$invalid">The description is required.</span>
       </div>
       <div class="form-group">
         <label>Due</label>
-        <input ng-model="due" name="due" class="form-control" placeholder="Due date:" required>
+        <input ng-model="ticket.due" name="due" class="form-control" placeholder="Due date:" required>
         <span class="alert alert-danger" role="alert" ng-show="titleForm.due.$touched && titleForm.due.$invalid">The due date is required.</span>
-        <span class="alert alert-danger" role="alert" ng-show="titleForm.due.$touched && !validDate(due)">Date must be in format MM/DD/YYYY</span>
+        <span class="alert alert-danger" role="alert" ng-show="titleForm.due.$touched && !validDate(ticket.due)">Date must be in format MM/DD/YYYY</span>
       </div>
       <div class="form-group">
-        <label for="status">Status</label>
-        <select class="form-control" name="status"  [(ngModel)] ="status.value" required>
-           <option [value]="Todo" [selected]="status.value == Todo">To do</option>
-           <option [value]="Done" [selected]="status.value == Done">Done</option>
+        <label for="statusForm">Status</label>
+        <select class="form-control" name="status" ng-model ="ticket.status" ng-dropdown required>
+           <option ng-option [value]="Todo" [selected]="status.value == Todo">To Do</option>
+           <option ng-option [value]="In Progress" [selected]="status.value == In Progress">In Progress</option>
+           <option ng-option [value]="Done" [selected]="status.value == Done">Done</option>
         </select>
-    </div>
+        <span class="alert alert-danger" role="alert" ng-show="titleForm.status.$touched && titleForm.status.$invalid">The status is required.</span>
+      </div>
   </div> 
-    <button ng-click="newTicket()" href="/#" type="submit" class="btn btn-primary" [disabled]="!ngForm.valid && !validDate(due)" ng-class="{'validTitle' : titleForm.title.$invalid}">Create Ticket</button>
+  <button id='submitBtn' ng-click="clickFunction()" type="submit" class="btn btn-primary">Create Ticket</button>
   </form>
 
 
