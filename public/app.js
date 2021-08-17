@@ -18,15 +18,23 @@ myApp.config(function ($routeProvider) {
     })
     .when('/edit/:id', {
         templateUrl: 'pages/create.htm',
-        controller: 'AppController'
+        controller: 'createTicketController'
     })
     .when('/create', {
         templateUrl: 'pages/create.htm',
-        controller: 'AppController'
+        controller: 'createTicketController'
     })
     .when('/cache', {
-        templateUrl: 'pages/tableFrag.htm',
+        templateUrl: 'pages/cacheFrag.htm',
         controller: 'CacheController'
+    })
+    .when('/lists', {
+        templateUrl: 'pages/listFrag.htm',
+        controller: 'AppController'
+    })
+    .when('/details/:id', {
+        templateUrl: 'pages/cacheDetails.htm',
+        controller: 'cacheDetailsController'
     })
 
 });

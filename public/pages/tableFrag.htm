@@ -10,15 +10,28 @@
                 <th>Actions</th>
             </tr>
         </thead>
-        <tbody><tr> 
-            <td ng-model="test"></td>
-            <td ng-model="test"></td>
-            <td ng-model="test"></td>
-            <td ng-model="test"></td>
-            <td ng-model="test"></td>
-            <td ng-model="test"></td>
+        <tbody>
+            <tr ng-repeat="ticket in tickets" id={{ticket._id}} >
+                <td>{{ticket._id}}</td>
+                <td>{{ticket.title}}</td>
+                <td>{{ticket.desc}}</td>
+                <td>{{ticket.due}}</td>
+                <td>{{ticket.status}}</td>
+                <td>
+           <a class="btn btn-outline-success" href="#/edit/{{ticket._id}}">Edit</a> 
+           <a class="btn btn-outline-danger" ng-click=rowClick(ticket._id) >Delete</a> 
 
-        </tr></tbody>
+
+                </td>
+            <!-- <td ng-model="test"></td>
+            <td ng-model="test"></td>
+            <td ng-model="test"></td>
+            <td ng-model="test"></td>
+            <td ng-model="test"></td>
+            <td ng-model="test"></td> -->
+
+           </tr>
+        </tbody>
     </table>
 
     <a class="btn btn-primary" href="#/create">Create new ticket</a>

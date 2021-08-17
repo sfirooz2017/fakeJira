@@ -1,0 +1,31 @@
+<form ng-controller="ListController" name="titleForm">
+    <div class="container"> 
+      <div class="form-group" >
+          <label >Title</label>
+          <input ng-model="ticket.title" name="title" class="form-control" placeholder="{{ticket.title || 'Title'}}" required> 
+          <span class="alert alert-danger validTitle" role="alert" ng-show="titleForm.title.$touched && titleForm.title.$invalid">The name is required.</span>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input ng-model="ticket.desc" name="desc" class="form-control" placeholder="{{ticket.desc || 'Description'}}" required>
+          <span class="alert alert-danger" role="alert" ng-show="titleForm.desc.$touched && titleForm.desc.$invalid">The description is required.</span>
+        </div>
+        <!-- <div class="form-group"></div>
+            <select ng-model="listId" ng-multiple="true" class="form-select" multiple>
+                <option ng-repeat="task in tasks">{{task}}</option>
+            </select>
+        </div> -->
+        <div class="form-group"></div>
+            <select class="selectpicker" ng-model="selectedIds" multiple>
+                <option ng-repeat="task in tasks">{{task}}</option>
+            </select>
+        </div> 
+        <div class="form-group"></div>
+         <button id='submitBtn' ng-click="clickFunction()" type="submit" class="btn btn-primary">Create Ticket</button>
+</div> 
+    </div> 
+     </form>
+  
+      
+  
+   

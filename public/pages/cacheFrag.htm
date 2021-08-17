@@ -1,0 +1,20 @@
+<div class="container" >
+    <table id="cachetable" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="c in caches" id={{c}}>
+                <td>{{c}}</td>
+                <td>
+                    <a class="btn btn-outline-success" href='#/details/{{c}}' + {{c}}>Details</a> 
+                    <a class="btn btn-outline-danger" ng-click=deleteCache(c) >Delete</a> 
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
