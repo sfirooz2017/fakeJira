@@ -1,4 +1,4 @@
-myApp.service('createListService', ['$http', function($http) {
+myApp.service('createListService', ['$http', 'cacheService', function($http, cacheService) {
       
         this.getIds = function(){
                 return $http.get('/api/findallids').then(function(response)
@@ -22,6 +22,8 @@ myApp.service('createListService', ['$http', function($http) {
         this.updateList = function(list){
                 $http.post('/api/list/update', list).then(function(response)
                 {
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
                         return response;
                 });
         }
@@ -33,12 +35,13 @@ myApp.service('createListService', ['$http', function($http) {
                 {
                         var row = $('#' + id);
                         $('#listtable').dataTable().fnDeleteRow(row);
-                        // var key = {key:'api'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
                 });
         }
 
         this.createList = function(list){
+                
                 var data = {
                         title: list.title,
                         tasks:  list.tasks
@@ -47,12 +50,15 @@ myApp.service('createListService', ['$http', function($http) {
    
                 $http.post('/api/list/save', data).then(function(response)
                 {
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
+
                         return response;
                 });  
         }
 }]);
 
-myApp.service('updateTicketService', ['$http', function($http) {
+myApp.service('updateTicketService', ['$http', 'cacheService', function($http, cacheService) {
 
         this.findAllTickets = function(){
                 return $http.get('/api/findall').then(function(response)
@@ -83,8 +89,11 @@ myApp.service('updateTicketService', ['$http', function($http) {
                 due: ticket.due,
                 status: ticket.status
         }
-                $http.post('/api/update', data).then(function(response)
-                {})
+                return $http.post('/api/update', data).then(function(response)
+                {
+                        var key = {key:'api'}
+                        cacheService.deleteCache(key);
+                })
         }
 }]);
 
@@ -104,7 +113,7 @@ myApp.service('deleteTicketService', ['$http', 'cacheService', function($http, c
         }
 }]);
 
-myApp.service('newTicketService', ['$http', function($http) {
+myApp.service('newTicketService', ['$http', 'cacheService', function($http, cacheService) {
 
         this.createTicket = function(ticket){
                 var data = {
@@ -115,6 +124,9 @@ myApp.service('newTicketService', ['$http', function($http) {
                 };
                 $http.post('/api/save', data).then(function(response)
                 {
+                        var key = {key:'api'}
+                        cacheService.deleteCache(key);
+
                         var ticket = {
                                 title : response.data.title,
                                 desc : response.data.desc,

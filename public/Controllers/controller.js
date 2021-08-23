@@ -7,7 +7,7 @@ myApp.controller('cacheDetailsController', [ '$scope', '$http', '$routeParams', 
 
 }]);
 
-myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$timeout', '$window', 'createListService', 'updateTicketService', function($scope, $http, $routeParams, $timeout, $window, createListService, updateTicketService){
+myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$timeout', '$window', 'createListService', 'updateTicketService', 'cacheService', function($scope, $http, $routeParams, $timeout, $window, createListService, updateTicketService, cacheService){
 
     $scope.selectedIds = new Array();
     $scope.tasks = [];
@@ -62,7 +62,8 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
                 }
 
                 createListService.updateList(list)
-                //cacheService.deleteCache(key);
+                var key = {key:'list'}
+                cacheService.deleteCache(key);
                 $window.location.href = '#/lists';
             }    
         } 
@@ -78,6 +79,8 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
             }
 
             createListService.createList(list)
+            var key = {key:'list'}
+            cacheService.deleteCache(key);
             $window.location.href = '#/lists';
 
         }
@@ -86,22 +89,43 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
 
 }]);
 
-myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createListService', function($scope, $http, $routeParams, createListService){
+myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createListService', 'cacheService', function($scope, $http, $routeParams, createListService, cacheService){
 
-    createListService.getLists()
-        .then(function(response)
-        {
-            $scope.lists = response.data;
-            $(document).ready(function() {
-                $('#listtable').DataTable( {
-                    responsive: true
-                });
-            });
-        })
     $scope.deleteList = function(id)
     {
     createListService.deleteList(id)
     }
+
+        cacheService.getCache({params: {key : "list"}})
+            .then(function(response){
+                if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
+                {
+                    createListService.getLists()
+                    .then(function(response)
+                    {
+                        createTable(response.data);
+                        cacheService.createCache('list', response.data);
+                    })
+                       
+                }
+                else
+                {
+                    console.log("list cache");
+                    createTable(Object.values(response.data));
+                }
+            })
+            function createTable(data)
+            {
+                $scope.lists = data;
+                $(document).ready(function() {
+                    $('#listtable').DataTable( {
+                        responsive: true
+                    });
+                });
+            }
+    
+
+
 }]);
 
 myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTicketService', 'deleteTicketService', 'cacheService', 'createListService', function($scope, $http, $routeParams, updateTicketService, deleteTicketService, cacheService, createListService){
@@ -171,7 +195,7 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
     }
 }]);
 
-myApp.controller('CacheController', ['$scope', '$http', 'cacheService', 'deleteTicketService', function($scope, $http, cacheService, deleteTicketService){
+myApp.controller('CacheController', ['$scope', 'cacheService', function($scope, cacheService){
 
     $scope.caches = [];
 
@@ -196,6 +220,8 @@ myApp.controller('CacheController', ['$scope', '$http', 'cacheService', 'deleteT
 myApp.controller('createTicketController', ['$scope', '$http', '$window','$routeParams', 'commonFuncsService', 'newTicketService', 'updateTicketService', 'cacheService', function($scope, $http, $window, $routeParams, commonFuncsService, newTicketService, updateTicketService, cacheService){
 
     $scope.validDate = commonFuncsService.validDate;
+
+        //if editing a pre-existing ticket
 
         if($routeParams.id)
         {  
@@ -235,6 +261,7 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                 }
             }
         }
+        //if creating a new ticket
         else
         {
             $scope.clickFunction = function(req){

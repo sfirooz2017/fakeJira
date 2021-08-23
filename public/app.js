@@ -1,10 +1,10 @@
 var myApp = angular.module('myApp', ['ngRoute', 'ngResource']);
-const flash = require('connect-flash');
-const session = require('express-session');
-const passport = require('passport');
+//const flash = require('connect-flash');
+// const session = require('express-session');
+// const passport = require('passport');
 
-//Passport config
-require('./config/passport')(passport)
+// //Passport config
+// require('./config/passport')(passport)
 
 //ROUTES
 myApp.config(function ($routeProvider) {
@@ -47,23 +47,27 @@ myApp.config(function ($routeProvider) {
         templateUrl: '/pages/createListFrag.htm',
         controller: 'CreateListController'
     })
+    .when('/login', {
+        templateUrl: '/pages/loginFrag.htm',
+        controller: 'AppController'
+    })
 
 });
 
 //Express Session
-app.use(session({
-    secret: 'secret',
-    resave: true,
-    saveUninitialized: true
-}));
+// app.use(session({
+//     secret: 'secret',
+//     resave: true,
+//     saveUninitialized: true
+// }));
 
-//Passport middleware
-app.use(passport.initialize());
-app.use(passport.session());
+// //Passport middleware
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 //Connect flash
 
-app.use(flash());
+//app.use(flash());
 
 
 
