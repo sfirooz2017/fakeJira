@@ -1,20 +1,22 @@
-var mongoose = require('mongoose');
-var express = require('express'); 
+const mongoose = require('mongoose');
+const express = require('express'); 
 const bodyParser = require("body-parser");
-var router = express.Router();
-var TicketModel = require('./schemas/ticketschema');
-var ListModel = require('./schemas/listschema');
-var cache = require('memory-cache');
+const router = express.Router();
+const TicketModel = require('./schemas/ticketschema');
+const ListModel = require('./schemas/listschema');
+const UserModel = require('./schemas/userschema');
+const cache = require('memory-cache');
 const util = require('util');
 const app = express();
 app.use(express.json());
+const bcrypt = require('bcryptjs')
+
+const passport = require('passport');
 mongoose.set('useFindAndModify', false);
 
 
 // Connecting to database
-var query = 'mongodb+srv://shannonUser:52WfXbrV2$8Agq_'
-    + '@cluster0.q546l.mongodb.net/ticket?'
-    + 'retryWrites=true&w=majority'
+var query = require('./config/keys').MongoURI;
   
 const db = (query);
 mongoose.Promise = global.Promise;
@@ -25,8 +27,6 @@ useUnifiedTopology: true }, function(error) {
         console.log("Error!" + error);
     }
 });
-
-
 
     //CREATE
 
@@ -54,15 +54,10 @@ router.post('/cache/save', function(req, res){
 });
 
 router.post('/list/save', function(req, res){
-2
     var list = new ListModel(); 
     list.title = req.body.title;
-    var tasks = req.body.tasks;
+    list.tasks = req.body.tasks;
 
-    tasks.forEach((task => {
-        list.tasks.push({ _id: task._id});
-    }))
- 
     list.save(function(err, data){
         if(err){
             console.log(err);
@@ -71,11 +66,10 @@ router.post('/list/save', function(req, res){
             res.send(data);
         }
     });
-    
-   
 });
 
 //RETRIEVE ALL
+
 router.get('/findall', function(req, res) {
     TicketModel.find(function(err, data) {
         if(err){
@@ -86,7 +80,6 @@ router.get('/findall', function(req, res) {
         }
     });  
  });
-
 
 router.get('/cache/findall', function(req, res){
     var r = cache.keys();
@@ -104,17 +97,15 @@ router.get('/list/findall', function(req, res) {
     });  
  });
 
-
  router.get('/findallids', function(req, res) {
      TicketModel.find({}, '_id', function(err, docs){
         res.send(docs);
-         console.log(docs);
     });
  });
 
 //RETRIEVE ONE
-router.get('/find', function(req, res) {
 
+router.get('/find', function(req, res) {
     TicketModel.findById((req.query.id), 
     function(err, data) {
         if(err){
@@ -127,28 +118,23 @@ router.get('/find', function(req, res) {
 });
 
 router.get('/cache/find', function(req, res){
-    console.log(req.query);
     var result = cache.get(req.query.key);
-    console.log(result + "r");
     res.send(result);
 });
 
 router.get('/list/find', function(req, res) {
-
-    ListModel.findById((req.body.id), 
+    ListModel.findById((req.query.id), 
     function(err, data) {
         if(err){
-            console.log(err);
+            res.send(err);
         }
         else{
             if (data==null)
             {
-            res.send("Not found");
+                res.send("Not found");
             }
             else
-          //  {
-            res.send(data);
-            //}
+                res.send(data);
         }
     });  
 });
@@ -168,8 +154,8 @@ router.post('/update', function(req, res) {
 });    
 
 router.post('/list/update', function(req, res) {
-    TicketModel.findByIdAndUpdate(req.body.id, 
-    {title:req.body.title}, function(err, data) {
+    ListModel.findByIdAndUpdate(req.body._id, 
+    {title:req.body.title, tasks:req.body.tasks}, function(err, data) {
         if(err){
             console.log(err);
         }
@@ -179,8 +165,8 @@ router.post('/list/update', function(req, res) {
     });  
 });    
 
-
      //DELETE
+
 router.post('/delete', function(req, res) {
     TicketModel.findByIdAndDelete((req.body.id), 
     function(err, data) {
@@ -195,16 +181,16 @@ router.post('/delete', function(req, res) {
     });  
 });
 
-
 router.post('/cache/delete', function(req, res){
+    console.log(req.body.key);
     cache.del(req.body.key);
-    console.log(req.body.key + "req");
     res.send();
+    console.log("cache deleted");
     
 });
 
 router.post('/list/delete', function(req, res) {
-    ListModel.findByIdAndDelete((req.body.id), 
+    ListModel.findByIdAndDelete((req.body._id), 
     function(err, data) {
         if(err){
             console.log(err);
@@ -216,5 +202,50 @@ router.post('/list/delete', function(req, res) {
     });  
 });
 
-  
+    //AUTH
+
+router.post('/register', function(req, res) {
+    //Check if user already exists
+    UserModel.findOne({email: req.body.email})
+    .then(user => {
+        if(user){
+            res.send("Duplicate user")
+        }
+        else
+        {
+            const newUser = new UserModel({
+            name: req.body.name,
+            email: req.body.email,
+            password: req.body.password
+            });
+            //Hash password
+            bcrypt.genSalt(10, (err, salt) => 
+                bcrypt.hash(newUser.password, salt, (err, hash) => {
+                    if(err) throw err;
+                    //replace password with hash
+                    newUser.password = hash;
+                    newUser.save() //move this to own func later
+                        .then(user => {
+                            res.send();
+                        })
+                        .catch(err => console.log(err));
+                }))
+        }
+
+    })
+
+});
+
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', {
+        // successRedirect: '/#',
+        // failureRedirect: '/users/login',
+        // failureFlash: true
+    })(req, res, next);
+});
+
+router.get('logout', (req, res) => {
+    req.logout();
+})
+
 module.exports = router;

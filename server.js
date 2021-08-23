@@ -1,8 +1,15 @@
 var express = require('express');
 var app = express();
+var router = express.Router();
 
+//EJS
+// app.use(expressLayouts);
+// app.set('view engine', 'ejs');
 
-//CREATE ID FOR EACH POST
+// //Login Page
+// router.get('/login', (req, res) => res.send('Login'));
+
+// router.get('/register', (req, res) => res.send('Register'));
 
 
 app.use(express.static(__dirname + "/public"));
@@ -11,6 +18,7 @@ app.use(express.urlencoded({
     extended: true
 }));
 
+//ROUTES
 const api = require('./api');
 app.use('/api', api);
 

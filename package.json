@@ -11,9 +11,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "bootstrap": "^5.1.0",
     "bootstrap-select": "^1.13.18",
+    "connect-flash": "^0.1.1",
+    "express-ejs-layouts": "^2.5.1",
+    "express-session": "^1.17.2",
     "memory-cache": "^0.2.0",
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0",
     "util": "^0.12.4"
   }
 }

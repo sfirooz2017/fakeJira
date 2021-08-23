@@ -2,12 +2,13 @@
 var mongoose=require('mongoose');
   
 var listSchema = new mongoose.Schema({
+
     title: {
-    type:String
+        type: String
     },
     tasks: [{
         _id: {
-        type:String
+            type: String
         }
     }]
 });

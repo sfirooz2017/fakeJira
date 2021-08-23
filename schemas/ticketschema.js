@@ -3,16 +3,16 @@ var mongoose=require('mongoose');
   
 var ticketSchema = new mongoose.Schema({
     title: {
-    type:String
+        type: String
     },
     desc: {
-    type:String
+        type: String
     },
     due: {
-    type:String
+        type: String
     },
     status: {
-    type:String
+        type: String
     }
 });
   

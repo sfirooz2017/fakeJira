@@ -1,31 +1,24 @@
-<form ng-controller="ListController" name="titleForm">
-    <div class="container"> 
-      <div class="form-group" >
-          <label >Title</label>
-          <input ng-model="ticket.title" name="title" class="form-control" placeholder="{{ticket.title || 'Title'}}" required> 
-          <span class="alert alert-danger validTitle" role="alert" ng-show="titleForm.title.$touched && titleForm.title.$invalid">The name is required.</span>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <input ng-model="ticket.desc" name="desc" class="form-control" placeholder="{{ticket.desc || 'Description'}}" required>
-          <span class="alert alert-danger" role="alert" ng-show="titleForm.desc.$touched && titleForm.desc.$invalid">The description is required.</span>
-        </div>
-        <!-- <div class="form-group"></div>
-            <select ng-model="listId" ng-multiple="true" class="form-select" multiple>
-                <option ng-repeat="task in tasks">{{task}}</option>
-            </select>
-        </div> -->
-        <div class="form-group"></div>
-            <select class="selectpicker" ng-model="selectedIds" multiple>
-                <option ng-repeat="task in tasks">{{task}}</option>
-            </select>
-        </div> 
-        <div class="form-group"></div>
-         <button id='submitBtn' ng-click="clickFunction()" type="submit" class="btn btn-primary">Create Ticket</button>
-</div> 
-    </div> 
-     </form>
-  
-      
-  
-   
+<div class="container">
+    <table id="listtable" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="l in lists" id={{l._id}}>
+                <td>{{l._id}}</td>
+                <td>{{l.title}}</td>
+                <td>
+                    <a class="btn btn-outline-success" href='#/lists/{{l._id}}' + {{c}}>View</a> 
+                    <a class="btn btn-outline-warning"  href='#/lists/edit/{{l._id}}' >Edit</a> 
+                    <a class="btn btn-outline-danger" ng-click=deleteList(l._id) >Delete</a> 
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <a class="btn btn-primary" href="#/create/lists">Create new list</a>
+
+</div>
