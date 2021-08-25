@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-us" ng-app="myApp">
+<html lang="en-us" ng-app="myApp" ng-controller="AuthController">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -21,27 +21,33 @@
 
     <head>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="#">Navbar</a>
+            <a class="navbar-brand" href="#/login">Login</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
               <div class="navbar-nav">
-                <a class="nav-item nav-link active" href="#/">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-item nav-link active" href="#/">Tasks<span class="sr-only">(current)</span></a>
                 <a class="nav-item nav-link" href="#/create">Create</a>
                 <a class="nav-item nav-link" href="#/cache">Cache</a>
-                <a class="nav-item nav-link disabled" href="#/lists">Lists</a>
+                <a class="nav-item nav-link" href="#/lists">Lists</a>
+                <span ng-click="logout()" ng-show="name" class="nav-item nav-link">Logout</span>
               </div>
             </div>
           </nav>
     </head>
 
          <body>
+         
              <div class="container" > 
-                <h1>Fake Jira</h1>
+              <span>
+                <h1>{{name}} Tasks</h1>
+              </span>
+              <div class="container">
                 <ng-view>
                
                 </ng-view>
+              </div>
             </div> 
             <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.js"></script>
             <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular-route.js"></script>

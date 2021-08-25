@@ -1,3 +1,36 @@
+
+myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, loginService, cacheService, commonFuncsService, Auth){
+
+    var user = {
+    email: $scope.email,
+    password: $scope.password,
+    name: $scope.name
+    }
+
+    $scope.logout = function(){
+        commonFuncsService.logout().then(function(response){
+            Auth.setUser(undefined);
+            $scope.name = null;
+            $window.location.href = '#/login';
+        });
+    }
+
+    commonFuncsService.userInfo().then(function(response){
+        var tempUser = {
+            name: response.data.name,
+            email: response.data.email
+        }
+        Auth.setUser(tempUser);
+        $scope.name = response.data.name;
+    });
+    // loginService.loginUser(user)
+    // .then (function(result){
+
+    // })
+
+    //if form valid, call login
+
+}]);
 myApp.controller('cacheDetailsController', [ '$scope', '$http', '$routeParams', 'cacheService', function($scope, $http, $routeParams, cacheService){
 
     cacheService.getCache({params: {key : $routeParams.id }})
@@ -128,7 +161,7 @@ myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createL
 
 }]);
 
-myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTicketService', 'deleteTicketService', 'cacheService', 'createListService', function($scope, $http, $routeParams, updateTicketService, deleteTicketService, cacheService, createListService){
+myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTicketService', 'deleteTicketService', 'cacheService', 'createListService', 'commonFuncsService', function($scope, $http, $routeParams, updateTicketService, deleteTicketService, cacheService, createListService, commonFuncsService){
 
     $scope.tickets = [];
     var list = null;
@@ -140,7 +173,6 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
             .then(function(response){
                 list = response.data;
                 ids = list.tasks;
-                console.log(ids);
                 loadTableData();
             });
     }

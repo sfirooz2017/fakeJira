@@ -1,3 +1,18 @@
+myApp.service('loginService', ['$http', 'cacheService', function($http, cacheService) {
+
+        this.loginUser = function(user){
+                return $http.post('/login', user).then(function(response)
+                {
+                        return response;
+                });
+        }
+        this.registerUser = function(user){
+                return $http.post('/register', user).then(function(response)
+                {
+                        return response;
+                });
+        }
+}]);
 myApp.service('createListService', ['$http', 'cacheService', function($http, cacheService) {
       
         this.getIds = function(){
@@ -22,8 +37,8 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
         this.updateList = function(list){
                 $http.post('/api/list/update', list).then(function(response)
                 {
-                        var key = {key:'list'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'list'}
+                        // cacheService.deleteCache(key);
                         return response;
                 });
         }
@@ -35,8 +50,8 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
                 {
                         var row = $('#' + id);
                         $('#listtable').dataTable().fnDeleteRow(row);
-                        var key = {key:'list'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'list'}
+                        // cacheService.deleteCache(key);
                 });
         }
 
@@ -50,15 +65,15 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
    
                 $http.post('/api/list/save', data).then(function(response)
                 {
-                        var key = {key:'list'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'list'}
+                        // cacheService.deleteCache(key);
 
                         return response;
                 });  
         }
 }]);
 
-myApp.service('updateTicketService', ['$http', 'cacheService', function($http, cacheService) {
+myApp.service('updateTicketService', ['$http', function($http) {
 
         this.findAllTickets = function(){
                 return $http.get('/api/findall').then(function(response)
@@ -89,10 +104,10 @@ myApp.service('updateTicketService', ['$http', 'cacheService', function($http, c
                 due: ticket.due,
                 status: ticket.status
         }
-                return $http.post('/api/update', data).then(function(response)
+                $http.post('/api/update', data).then(function(response)
                 {
-                        var key = {key:'api'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'api'}
+                        // cacheService.deleteCache(key);
                 })
         }
 }]);
@@ -107,8 +122,8 @@ myApp.service('deleteTicketService', ['$http', 'cacheService', function($http, c
                 {
                         var row = $('#' + id);
                         $('#dtable').dataTable().fnDeleteRow(row);
-                        var key = {key:'api'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'api'}
+                        // cacheService.deleteCache(key);
                 });
         }
 }]);
@@ -124,8 +139,8 @@ myApp.service('newTicketService', ['$http', 'cacheService', function($http, cach
                 };
                 $http.post('/api/save', data).then(function(response)
                 {
-                        var key = {key:'api'}
-                        cacheService.deleteCache(key);
+                        // var key = {key:'api'}
+                        // cacheService.deleteCache(key);
 
                         var ticket = {
                                 title : response.data.title,
@@ -167,7 +182,37 @@ myApp.service('cacheService', ['$http', function($http) {
         }
 }]);
 
-myApp.service('commonFuncsService', [function() {
+myApp.factory('Auth', function(){
+
+        var user = {name: null, email: null};
+        
+        return{
+            setUser : function(aUser){
+                user = aUser;
+            },
+            isLoggedIn : function(){
+                return(!user.email)? false : true;
+            },
+            getUser : function(){
+                return user;
+            }
+          }
+        })
+        
+myApp.service('commonFuncsService', ['$http', function($http) {
+
+        this.userInfo = function (){
+                return $http.get('/api/auth').then(function(response)
+                {
+                        return response;
+                }); 
+        }
+        this.logout = function (){
+                return $http.get('/api/logout').then(function(response)
+                {
+                        return response;
+                }); 
+        }
 
         this.validDate = function (dateString)
         {

@@ -10,6 +10,7 @@ const util = require('util');
 const app = express();
 app.use(express.json());
 const bcrypt = require('bcryptjs')
+const { ensureAuthenticated, forwardAuthenticated } = require('./config/auth');
 
 const passport = require('passport');
 mongoose.set('useFindAndModify', false);
@@ -31,6 +32,23 @@ useUnifiedTopology: true }, function(error) {
     //CREATE
 
 router.post('/save', function(req, res) {
+
+    var ticket = new TicketModel();
+    ticket.title = req.body.title;
+    ticket.desc = req.body.desc;
+    ticket.due = req.body.due;
+    ticket.status = req.body.status;
+
+    ticket.save(function(err, data){
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }
+    });
+});
+router.post('user/save', function(req, res) {
 
     var ticket = new TicketModel();
     ticket.title = req.body.title;
@@ -238,14 +256,27 @@ router.post('/register', function(req, res) {
 
 router.post('/login', (req, res, next) => {
     passport.authenticate('local', {
-        // successRedirect: '/#',
-        // failureRedirect: '/users/login',
+        successRedirect: '/#',
+        failureRedirect: '/login'
         // failureFlash: true
     })(req, res, next);
 });
 
-router.get('logout', (req, res) => {
+router.get('/logout', (req, res) => {
     req.logout();
+    res.send();
 })
+
+router.get('/auth', ensureAuthenticated, (req, res) =>
+  {
+      console.log("auth");
+      res.send(req.user);
+  })
+
+  router.get('/getUser', ensureAuthenticated, (req, res) =>
+  {
+      console.log("auth");
+      res.send(req.user);
+  })
 
 module.exports = router;

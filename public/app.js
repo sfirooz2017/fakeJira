@@ -1,10 +1,4 @@
 var myApp = angular.module('myApp', ['ngRoute', 'ngResource']);
-//const flash = require('connect-flash');
-// const session = require('express-session');
-// const passport = require('passport');
-
-// //Passport config
-// require('./config/passport')(passport)
 
 //ROUTES
 myApp.config(function ($routeProvider) {
@@ -48,29 +42,36 @@ myApp.config(function ($routeProvider) {
         controller: 'CreateListController'
     })
     .when('/login', {
-        templateUrl: '/pages/loginFrag.htm',
-        controller: 'AppController'
+        templateUrl: '/pages/loginFrag.htm',  
+        controller: 'AuthController'  
     })
+    .when('/logout', {
+        templateUrl: '/pages/loginFrag.htm'    
+    })
+    .when('/user/dashboard', {
+        templateUrl: '/pages/user/userDashboard.htm'
+    })
+    .otherwise({ redirectTo: '/' });
+}); 
 
-});
+myApp.run(["$rootScope", "Auth", "$location", "$window",
+function($rootScope, Auth, $location, $window) {
 
-//Express Session
-// app.use(session({
-//     secret: 'secret',
-//     resave: true,
-//     saveUninitialized: true
-// }));
+  "use strict";
 
-// //Passport middleware
-// app.use(passport.initialize());
-// app.use(passport.session());
+  $rootScope.$on("$locationChangeStart", function(event) {
+     
+      var url = $location.absUrl();
+      if (url.includes('user'))
+      {
+        if (!Auth.isLoggedIn()) {
+            console.log('DENY');
+            $location.path('/login');
+        }
+        else {
+            console.log('ALLOW');
+        }
+    }
+  });
 
-//Connect flash
-
-//app.use(flash());
-
-
-
-
-//directives
-
+}]);
