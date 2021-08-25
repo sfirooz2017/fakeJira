@@ -13,7 +13,17 @@ var userSchema = new mongoose.Schema({
     date: {
         type: Date,
         default: Date.now
-    }
+    },
+    tasks: [{
+        _id: {
+            type: String
+        }
+    }],
+    lists: [{
+        _id: {
+            type: String
+        }
+    }]
   
 });
   

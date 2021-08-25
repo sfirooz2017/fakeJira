@@ -48,23 +48,6 @@ router.post('/save', function(req, res) {
         }
     });
 });
-router.post('user/save', function(req, res) {
-
-    var ticket = new TicketModel();
-    ticket.title = req.body.title;
-    ticket.desc = req.body.desc;
-    ticket.due = req.body.due;
-    ticket.status = req.body.status;
-
-    ticket.save(function(err, data){
-        if(err){
-            console.log(err);
-        }
-        else{
-            res.send(data);
-        }
-    });
-});
 
 router.post('/cache/save', function(req, res){
     cache.put(req.body.key, req.body.value, 86400000);
@@ -99,12 +82,27 @@ router.get('/findall', function(req, res) {
     });  
  });
 
+ router.get('/user/findall', function(req, res) {
+
+    TicketModel.find({'_id' : {$in : req.user.tasks}},
+        function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }
+    });  
+ });
+
 router.get('/cache/findall', function(req, res){
     var r = cache.keys();
     res.send(r);
 });
 
+
 router.get('/list/findall', function(req, res) {
+
     ListModel.find(function(err, data) {
         if(err){
             console.log(err);
@@ -112,6 +110,20 @@ router.get('/list/findall', function(req, res) {
         else{
             res.send(data);
         }
+    });  
+ });
+
+router.get('/user/list/findall', function(req, res) {
+
+
+    ListModel.find({'_id' : {$in : req.user.lists}},
+    function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }   
     });  
  });
 
@@ -171,6 +183,20 @@ router.post('/update', function(req, res) {
     });  
 });    
 
+router.post('/user/update', function(req, res) {
+    //remove id from user list and tasks
+
+    UserModel.findByIdAndUpdate(req.user.id, 
+    {tasks:req.body.tasks, lists: req.body.lists}, function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }
+    });  
+});
+
 router.post('/list/update', function(req, res) {
     ListModel.findByIdAndUpdate(req.body._id, 
     {title:req.body.title, tasks:req.body.tasks}, function(err, data) {
@@ -182,7 +208,6 @@ router.post('/list/update', function(req, res) {
         }
     });  
 });    
-
      //DELETE
 
 router.post('/delete', function(req, res) {
@@ -234,7 +259,9 @@ router.post('/register', function(req, res) {
             const newUser = new UserModel({
             name: req.body.name,
             email: req.body.email,
-            password: req.body.password
+            password: req.body.password,
+            tasks: req.body.tasks,
+            lists: req.body.lists
             });
             //Hash password
             bcrypt.genSalt(10, (err, salt) => 
@@ -275,7 +302,7 @@ router.get('/auth', ensureAuthenticated, (req, res) =>
 
   router.get('/getUser', ensureAuthenticated, (req, res) =>
   {
-      console.log("auth");
+      console.log("authy");
       res.send(req.user);
   })
 

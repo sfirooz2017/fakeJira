@@ -1,4 +1,4 @@
-myApp.service('loginService', ['$http', 'cacheService', function($http, cacheService) {
+myApp.service('loginService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
 
         this.loginUser = function(user){
                 return $http.post('/login', user).then(function(response)
@@ -12,6 +12,14 @@ myApp.service('loginService', ['$http', 'cacheService', function($http, cacheSer
                         return response;
                 });
         }
+        this.updateUser = function()
+        {
+                $http.post('/api/user/update', {tasks: Auth.getUser().tasks, lists: Auth.getUser().lists}).then(function(response)
+                {
+                        // var key = {key:'api'}
+                        // cacheService.deleteCache(key);
+                })
+        }
 }]);
 myApp.service('createListService', ['$http', 'cacheService', function($http, cacheService) {
       
@@ -22,7 +30,12 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
                 });
         }
         this.getLists = function(){
-                return $http.get('/api/list/findall').then(function(response)
+                //ADMIN
+                // return $http.get('/api/list/findall').then(function(response)
+                // {
+                //         return response;
+                // });
+                return $http.get('/api/user/list/findall').then(function(response)
                 {
                         return response;
                 });
@@ -63,7 +76,7 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
 
                 };
    
-                $http.post('/api/list/save', data).then(function(response)
+                return $http.post('/api/list/save', data).then(function(response)
                 {
                         // var key = {key:'list'}
                         // cacheService.deleteCache(key);
@@ -75,7 +88,15 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
 
 myApp.service('updateTicketService', ['$http', function($http) {
 
+        this.findUserTickets = function(){
+
+                 return $http.get('/api/user/findall').then(function(response)
+                {
+                        return response;
+                });
+        }
         this.findAllTickets = function(){
+                //ADMIN
                 return $http.get('/api/findall').then(function(response)
                 {
                         return response;
@@ -137,8 +158,9 @@ myApp.service('newTicketService', ['$http', 'cacheService', function($http, cach
                         due : ticket.due,
                         status : ticket.status
                 };
-                $http.post('/api/save', data).then(function(response)
+                return $http.post('/api/save', data).then(function(response)
                 {
+                        return response;
                         // var key = {key:'api'}
                         // cacheService.deleteCache(key);
 
@@ -184,7 +206,12 @@ myApp.service('cacheService', ['$http', function($http) {
 
 myApp.factory('Auth', function(){
 
-        var user = {name: null, email: null};
+        var user = {
+                name: null, 
+                email: null,
+                tasks: [],
+                lists: []
+        };
         
         return{
             setUser : function(aUser){

@@ -15,10 +15,9 @@ app.use(express.static(__dirname + "/public"));
 
 //app.use('/user', ensureAuthenticated, express.static(path.join(__dirname, '/public/pages/users')));
 
-app.get('/pages/user/*', ensureAuthenticated, (req, res) => {
-    console.log("ahh");
-    res.send("not allowed");
-});
+// app.get('/pages/user/*', ensureAuthenticated, (req, res) => {
+//     res.send("not allowed");
+// });
 
 app.use(express.json());
 app.use(express.urlencoded({
@@ -42,8 +41,6 @@ app.use(
 //ROUTES
 const api = require('./api');
 app.use('/api', api);
- 
-
 
 
 app.listen(3000);
