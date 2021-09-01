@@ -31,7 +31,7 @@ useUnifiedTopology: true }, function(error) {
 
     //CREATE
 
-router.post('/save', function(req, res) {
+router.post('/save', ensureAuthenticated, function(req, res) {
 
     var ticket = new TicketModel();
     ticket.title = req.body.title;
@@ -49,12 +49,12 @@ router.post('/save', function(req, res) {
     });
 });
 
-router.post('/cache/save', function(req, res){
+router.post('/cache/save', ensureAuthenticated, function(req, res){
     cache.put(req.body.key, req.body.value, 86400000);
     res.send(req.body.value);
 });
 
-router.post('/list/save', function(req, res){
+router.post('/list/save', ensureAuthenticated, function(req, res){
     var list = new ListModel(); 
     list.title = req.body.title;
     list.tasks = req.body.tasks;
@@ -74,13 +74,6 @@ router.post('/list/save', function(req, res){
 router.get('/findall', ensureAdmin, function(req, res) {
     TicketModel.find(function(err, data) {
         if(err){
-            if (err.contains(401)){
-                res.writeHead(401, {
-                    'Location': 'http://localhost:3000/#'
-                    //add other headers here...
-                  });
-                  res.end();
-            }
             console.log(err);
         }
         else{
@@ -89,7 +82,7 @@ router.get('/findall', ensureAdmin, function(req, res) {
     });  
  });
 
- router.get('/user/findall', function(req, res) {
+ router.get('/user/findall', ensureAuthenticated, function(req, res) {
 
     TicketModel.find({'_id' : {$in : req.user.tasks}},
         function(err, data) {
@@ -102,7 +95,7 @@ router.get('/findall', ensureAdmin, function(req, res) {
     });  
  });
 
-router.get('/cache/findall', function(req, res){
+router.get('/cache/findall', ensureAuthenticated, function(req, res){
     var r = cache.keys();
     res.send(r);
 });
@@ -132,7 +125,7 @@ router.get('/users/findall', ensureAdmin, function(req, res) {
     });  
  });
 
-router.get('/user/list/findall', function(req, res) {
+router.get('/user/list/findall', ensureAuthenticated, function(req, res) {
 
 
     ListModel.find({'_id' : {$in : req.user.lists}},
@@ -146,7 +139,7 @@ router.get('/user/list/findall', function(req, res) {
     });  
  });
 
- router.get('/findallids', function(req, res) {
+ router.get('/findallids', ensureAuthenticated, function(req, res) {
      TicketModel.find({}, '_id', function(err, docs){
         res.send(docs);
     });
@@ -154,7 +147,7 @@ router.get('/user/list/findall', function(req, res) {
 
 //RETRIEVE ONE
 
-router.get('/find', function(req, res) {
+router.get('/find', ensureAuthenticated, function(req, res) {
     TicketModel.findById((req.query.id), 
     function(err, data) {
         if(err){
@@ -166,12 +159,12 @@ router.get('/find', function(req, res) {
     });  
 });
 
-router.get('/cache/find', function(req, res){
+router.get('/cache/find', ensureAuthenticated, function(req, res){
     var result = cache.get(req.query.key);
     res.send(result);
 });
 
-router.get('/list/find', function(req, res) {
+router.get('/list/find', ensureAuthenticated, function(req, res) {
     ListModel.findById((req.query.id), 
     function(err, data) {
         if(err){
@@ -190,7 +183,7 @@ router.get('/list/find', function(req, res) {
 
      //UPDATE
 
-router.post('/update', function(req, res) {
+router.post('/update', ensureAuthenticated, function(req, res) {
     TicketModel.findByIdAndUpdate(req.body.id, 
     {title:req.body.title, desc: req.body.desc, due: req.body.due, status: req.body.status}, function(err, data) {
         if(err){
@@ -202,7 +195,7 @@ router.post('/update', function(req, res) {
     });  
 });    
 
-router.post('/user/update', function(req, res) {
+router.post('/user/update', ensureAuthenticated, function(req, res) {
 
     UserModel.findByIdAndUpdate(req.user.id, 
     {tasks:req.body.tasks, lists: req.body.lists}, function(err, data) {
@@ -217,8 +210,8 @@ router.post('/user/update', function(req, res) {
 
 router.post('/user/updateRole', ensureAdmin, function(req, res) {
 
-    UserModel.findByIdAndUpdate(req.id, 
-    {role:req.role}, function(err, data) {
+    UserModel.findByIdAndUpdate(req.body.id, 
+    {role:req.body.role}, function(err, data) {
         if(err){
             console.log(err);
         }
@@ -228,7 +221,7 @@ router.post('/user/updateRole', ensureAdmin, function(req, res) {
     });  
 });
 
-router.post('/list/update', function(req, res) {
+router.post('/list/update', ensureAuthenticated, function(req, res) {
     ListModel.findByIdAndUpdate(req.body._id, 
     {title:req.body.title, tasks:req.body.tasks}, function(err, data) {
         if(err){
@@ -241,7 +234,7 @@ router.post('/list/update', function(req, res) {
 });    
      //DELETE
 
-router.post('/delete', function(req, res) {
+router.post('/delete', ensureAuthenticated, function(req, res) {
     TicketModel.findByIdAndDelete((req.body.id), 
     function(err, data) {
         if(err){
@@ -250,25 +243,36 @@ router.post('/delete', function(req, res) {
         }
         else{
             res.send("Data Deleted!");
-            console.log("Data Deleted!");
         }
     });  
 });
 
-router.post('/cache/delete', function(req, res){
-    console.log(req.body.key);
+router.post('/user/delete', ensureAdmin, function(req, res) {
+    UserModel.findByIdAndDelete((req.body.id), 
+    function(err, data) {
+        if(err){
+            res.send(err);
+            console.log(err);
+        }
+        else{
+            res.send("Data Deleted!");
+        }
+    });  
+});
+
+router.post('/cache/delete', ensureAuthenticated, function(req, res){
     cache.del(req.body.key);
     res.send();
     console.log("cache deleted");
     
 });
 
-router.post('/cache/deleteAll', function(req, res){
+router.post('/cache/deleteAll', ensureAuthenticated, function(req, res){
     cache.clear();
     res.send();    
 });
 
-router.post('/list/delete', function(req, res) {
+router.post('/list/delete', ensureAuthenticated, function(req, res) {
     ListModel.findByIdAndDelete((req.body._id), 
     function(err, data) {
         if(err){

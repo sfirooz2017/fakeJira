@@ -25,17 +25,16 @@ myApp.service('loginService', ['$http', 'cacheService', 'Auth', function($http, 
 myApp.service('userInfoService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
         
         this.deleteUser = function(id){
-                return $http.post('/api/user', {id}).then(function(response)
+                return $http.post('/api/user/delete', {id}).then(function(response)
                 {
-                        return response;
+                        var row = $('#' + id);
+                        $('#userstable').dataTable().fnDeleteRow(row);
+                       // return response;
                 });
         }
 
         this.updateUserRole = function(id, role){
-                return $http.post('/api/user/updateRole', {id, role}).then(function(response)
-                {
-                        return response;
-                });
+                return $http.post('/api/user/updateRole', {id, role})
         }
 
         this.getUsers = function(){

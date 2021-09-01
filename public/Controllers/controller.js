@@ -4,7 +4,6 @@ myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService
 
     $scope.logout = function(){
         commonFuncsService.logout().then(function(response){
-            Auth.setUser('UNAUTHORIZED');
             $scope.name = null;
             $scope.admin = false;
             console.log("logout");
@@ -25,14 +24,23 @@ myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService
 
 myApp.controller('AdminController', [ '$scope', '$http', '$window', 'userInfoService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, userInfoService, cacheService, commonFuncsService, Auth){
  
-    $scope.deleteUser = function(id)
+    $scope.deleteUser = function(user)
     {
-        userInfoService.deleteUser(id);
+        if(window.confirm('Are sure you want to delete user' + user.email + "?")){
+            console.log("deleted");
+            //put your delete method logic here
+           }
+        var key = {key:'users'}
+        cacheService.deleteCache(key);
+        userInfoService.deleteUser(user._id);
     }
 
-    $scope.updateUser = function(id, role)
+    $scope.updateUser = function(user, role)
     {
-        userInfoService.updateUserRole(id, role);
+        user.role=role;
+        var key = {key:'users'}
+        cacheService.deleteCache(key);
+        userInfoService.updateUserRole(user._id, role);
     }
 
         cacheService.getCache({params: {key : "users"}})

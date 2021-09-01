@@ -3,7 +3,8 @@ module.exports = {
         if(req.isAuthenticated()){
             return next();
         }
-        res.send("UNAUTHORIZED")
+        return res.send(401);
+       // res.send("UNAUTHORIZED")
         console.log(req.user);
     },
     forwardAuthenticated: function(req, res, next) {
@@ -15,12 +16,10 @@ module.exports = {
     ensureAdmin: function(req, res, next) {
         // ensure authenticated user exists with admin role, 
         // otherwise send 401 response status
-        console.log("ensureadmin");
         if (req.user && req.user.role == 'ADMIN') {
             return next();
         } else {
-            return res.send(401);
-            
+            return res.send(402);
         }
     }
 }

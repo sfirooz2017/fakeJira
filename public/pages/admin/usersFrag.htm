@@ -14,11 +14,11 @@
                 <td>{{user._id}}</td>
                 <td>{{user.name}}</td>
                 <td>{{user.email}}</td>
-                <td>{{user.role || 'User'}}</td>
+                <td>{{user.role || 'USER'}}</td>
                 <td>
-                    <a class="btn btn-outline-success" ng-if="user.role!='ADMIN'" ng-click="updateUser(user._id, 'ADMIN')">Turn to Admin</a> 
-                    <a class="btn btn-outline-success" ng-if="user.role=='ADMIN'" ng-click="updateUser(user._id, 'USER')">Turn to User</a> 
-                    <a class="btn btn-outline-danger" ng-click=deleteUser(user) >Delete</a> 
+                    <a class="btn btn-outline-success" ng-if="user.role!='ADMIN'" ng-click="updateUser(user, 'ADMIN')">Turn to Admin</a> 
+                    <a class="btn btn-outline-success" ng-if="user.role=='ADMIN'" ng-click="updateUser(user, 'USER')">Turn to User</a> 
+                    <a class="btn btn-outline-danger" ng-click="deleteUser(user)" >Delete</a> 
                 </td>
             </tr>
         </tbody>

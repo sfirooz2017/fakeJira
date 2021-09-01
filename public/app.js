@@ -57,30 +57,30 @@ myApp.config(function ($routeProvider) {
 
     })
     .otherwise({ redirectTo: '/' });
-}); 
-
-myApp.run(["$rootScope", "Auth", "$location", "$window",
-function($rootScope, Auth, $location, $window) {
-
-  "use strict";
-
-  $rootScope.$on("$locationChangeStart", function(event) {
-     
-      var url = $location.absUrl();
- 
-            console.log(Auth.getUser())
-            console.log(Auth.getUser().role)
-        if (Auth.getUser()=='UNAUTHORIZED' ) {
-            console.log('DENY');
-            $location.path('/login');
-        }
-
-
-        // if (url.includes('admin') && Auth.getUser().role!='ADMIN')
-        // {
-        //   console.log('ADMIN ONLY');
-        //   $location.path('/login');
-        // }
-  });
-
-}]);
+}
+);
+myApp.factory('authHttpResponseInterceptor',['$q','$location',function($q,$location){
+	return {
+		response: function(response){
+			if (response.status === 401) {
+				console.log("Response 401");
+			}
+			return response || $q.when(response);
+		},
+		responseError: function(rejection) {
+			if (rejection.status === 401) {
+				console.log("Response Error 401",rejection);
+				$location.path('/login');
+			}
+            if (rejection.status === 402) {
+				console.log("Response Error 402",rejection);
+				$location.path('/');
+			}
+			return $q.reject(rejection);
+		}
+	}
+}])
+myApp.config(['$httpProvider',function($httpProvider) {
+	//Http Intercpetor to check auth failures for xhr requests
+	$httpProvider.interceptors.push('authHttpResponseInterceptor');
+}])
