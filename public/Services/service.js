@@ -21,7 +21,33 @@ myApp.service('loginService', ['$http', 'cacheService', 'Auth', function($http, 
                 })
         }
 }]);
-myApp.service('createListService', ['$http', 'cacheService', function($http, cacheService) {
+
+myApp.service('userInfoService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
+        
+        this.deleteUser = function(id){
+                return $http.post('/api/user', {id}).then(function(response)
+                {
+                        return response;
+                });
+        }
+
+        this.updateUserRole = function(id, role){
+                return $http.post('/api/user/updateRole', {id, role}).then(function(response)
+                {
+                        return response;
+                });
+        }
+
+        this.getUsers = function(){
+                return $http.get('/api/users/findall').then(function(response)
+                {
+                        return response;
+                });
+        }
+
+}]);
+
+myApp.service('createListService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
       
         this.getIds = function(){
                 return $http.get('/api/findallids').then(function(response)
@@ -35,10 +61,20 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
                 // {
                 //         return response;
                 // });
-                return $http.get('/api/user/list/findall').then(function(response)
+                if(Auth.getUser().role=="ADMIN")
                 {
-                        return response;
-                });
+                        return $http.get('/api/list/findall').then(function(response)
+                        {
+                                return response;
+                        });
+                }
+                else
+                {
+                        return $http.get('/api/user/list/findall').then(function(response)
+                        {
+                                return response;
+                        });
+                }
         }
         this.getList = function(list){
             
@@ -86,14 +122,23 @@ myApp.service('createListService', ['$http', 'cacheService', function($http, cac
         }
 }]);
 
-myApp.service('updateTicketService', ['$http', function($http) {
+myApp.service('updateTicketService', ['$http', 'Auth', function($http, Auth) {
 
         this.findUserTickets = function(){
-
-                 return $http.get('/api/user/findall').then(function(response)
+                if(Auth.getUser().role=="ADMIN")
                 {
-                        return response;
-                });
+                        return $http.get('/api/findall').then(function(response)
+                        {
+                                return response;
+                        });
+                }
+                else
+                {
+                        return $http.get('/api/user/findall').then(function(response)
+                        {
+                                return response;
+                        });
+                }
         }
         this.findAllTickets = function(){
                 //ADMIN
@@ -202,29 +247,45 @@ myApp.service('cacheService', ['$http', function($http) {
         this.deleteCache = function(id){
                 $http.post('/api/cache/delete', id)
         }
+
+        this.clearCache = function(id){
+                $http.post('/api/cache/deleteAll', id)
+        }
 }]);
 
-myApp.factory('Auth', function(){
+myApp.factory('Auth', ['commonFuncsService', function(commonFuncsService){
 
         var user = {
                 name: null, 
                 email: null,
                 tasks: [],
-                lists: []
+                lists: [],
+                role: null
         };
         
         return{
             setUser : function(aUser){
                 user = aUser;
-            },
-            isLoggedIn : function(){
-                return(!user.email)? false : true;
+                console.log(user);
+                console.log("set");
             },
             getUser : function(){
-                return user;
+                    if (typeof user !== 'undefined')
+                    return user;
+                    console.log(user);
+                    console.log("get");
+                commonFuncsService.userInfo().then(function(response)
+                {
+                       // console.log(response.data)
+                  return response.data;
+                //     if (tempUser.role=='ADMIN')
+                //     {
+                //         $scope.admin=true;
+                //     }
+                });
             }
           }
-        })
+        }])
         
 myApp.service('commonFuncsService', ['$http', function($http) {
 

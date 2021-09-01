@@ -23,7 +23,10 @@ var userSchema = new mongoose.Schema({
         _id: {
             type: String
         }
-    }]
+    }],
+    role: {
+        type: String
+    }
   
 });
   

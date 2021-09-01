@@ -1,0 +1,27 @@
+<div class="container" >
+    <table id="userstable" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="user in users" id={{user._id}}>
+                <td>{{user._id}}</td>
+                <td>{{user.name}}</td>
+                <td>{{user.email}}</td>
+                <td>{{user.role || 'User'}}</td>
+                <td>
+                    <a class="btn btn-outline-success" ng-if="user.role!='ADMIN'" ng-click="updateUser(user._id, 'ADMIN')">Turn to Admin</a> 
+                    <a class="btn btn-outline-success" ng-if="user.role=='ADMIN'" ng-click="updateUser(user._id, 'USER')">Turn to User</a> 
+                    <a class="btn btn-outline-danger" ng-click=deleteUser(user) >Delete</a> 
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>

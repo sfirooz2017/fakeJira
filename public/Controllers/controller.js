@@ -1,26 +1,70 @@
 
 myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, loginService, cacheService, commonFuncsService, Auth){
+    $scope.admin = false;
 
     $scope.logout = function(){
         commonFuncsService.logout().then(function(response){
-            Auth.setUser(undefined);
+            Auth.setUser('UNAUTHORIZED');
             $scope.name = null;
+            $scope.admin = false;
+            console.log("logout");
+            cacheService.clearCache();
             $window.location.href = '#/login';
         });
     }
-
-    commonFuncsService.userInfo().then(function(response){
-        var tempUser = {
-            name: response.data.name,
-            email: response.data.email,
-            tasks: response.data.tasks,
-            lists: response.data.lists
-        }
-        Auth.setUser(tempUser);
-        $scope.name = response.data.name;
-    });
-
+        commonFuncsService.userInfo().then(function(response)
+        {
+            Auth.setUser(response.data);
+            if (response.data.role=='ADMIN')
+            {
+                $scope.admin=true;
+            }
+            $scope.name = response.data.name;
+        });
 }]);
+
+myApp.controller('AdminController', [ '$scope', '$http', '$window', 'userInfoService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, userInfoService, cacheService, commonFuncsService, Auth){
+ 
+    $scope.deleteUser = function(id)
+    {
+        userInfoService.deleteUser(id);
+    }
+
+    $scope.updateUser = function(id, role)
+    {
+        userInfoService.updateUserRole(id, role);
+    }
+
+        cacheService.getCache({params: {key : "users"}})
+            .then(function(response){
+                if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
+                {
+                    
+                    userInfoService.getUsers()
+                    .then(function(response)
+                    {
+                        createTable(response.data);
+                        cacheService.createCache('users', response.data);
+                    })
+                       
+                }
+                else
+                {
+                    console.log("users cache");
+                    createTable(Object.values(response.data));
+                }
+            })
+            function createTable(data)
+            {
+                $scope.users = data;
+                $(document).ready(function() {
+                    $('#userstable').DataTable( {
+                        responsive: true
+                    });
+                });
+            }
+}]);
+
 myApp.controller('cacheDetailsController', [ '$scope', '$http', '$routeParams', 'cacheService', function($scope, $http, $routeParams, cacheService){
 
     cacheService.getCache({params: {key : $routeParams.id }})
@@ -106,9 +150,12 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
             {
             console.log(response.data);
             //add ticket to user's db
-            Auth.getUser().lists.push({_id: response.data._id})
-            console.log(Auth.getUser().lists);
-            loginService.updateUser();
+            if (Auth.getUser().role!='ADMIN')
+            {
+                Auth.getUser().lists.push({_id: response.data._id})
+                console.log(Auth.getUser().lists);
+                loginService.updateUser();
+            }
             var key = {key:'list'}
             cacheService.deleteCache(key);
             $window.location.href = '#/lists';
@@ -124,16 +171,19 @@ myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createL
 
     $scope.deleteList = function(id)
     {
-   // createListService.deleteList(id)
-    Auth.getUser().lists = Auth.getUser().lists.filter(list=>list._id !== id);
-    loginService.updateUser();
+        createListService.deleteList(id)
+        if (Auth.getUser().role!='ADMIN')
+        {
+            Auth.getUser().lists = Auth.getUser().lists.filter(list=>list._id !== id);
+            loginService.updateUser();
+        }
     }
 
         cacheService.getCache({params: {key : "list"}})
             .then(function(response){
                 if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
                 {
-
+                    
                     createListService.getLists()
                     .then(function(response)
                     {
@@ -183,11 +233,13 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
     }
     $scope.rowClick = function(id){
 
-      //  deleteTicketService.deleteTicket(id);
-        Auth.getUser().tasks = Auth.getUser().tasks.filter(task=>task._id !== id);
-        console.log(Auth.getUser().tasks);
-        loginService.updateUser();
-        //remove from user
+        deleteTicketService.deleteTicket(id);
+        if (Auth.getUser().role!='ADMIN')
+        {
+            Auth.getUser().tasks = Auth.getUser().tasks.filter(task=>task._id !== id);
+            console.log(Auth.getUser().tasks);
+            loginService.updateUser();
+        }
     }
 
     function createTable(response){
@@ -213,13 +265,13 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
         });
     }
     function loadTableData(){
-        cacheService.getCache({params: {key : "api"}})
+        cacheService.getCache({params: {key : "tasks"}})
             .then(function(response){
                 if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
                 {
                     updateTicketService.findUserTickets().then(function(response){
                         createTable(response.data);
-                        cacheService.createCache('api', response.data);
+                        cacheService.createCache('tasks', response.data);
                     });
                 }
                 else
@@ -251,6 +303,11 @@ myApp.controller('CacheController', ['$scope', 'cacheService', function($scope, 
         cacheService.deleteCache(key);
         var row = $('#' + id.toString());
         $('#cachetable').dataTable().fnDeleteRow(row);
+    }
+
+    $scope.clearCache = function(){
+        cacheService.clearCache();
+        $('#cachetable').dataTable().fnClearTable();
     }
 }]);
 
@@ -292,7 +349,7 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                         "status": $scope.ticket.status
                     }
                     updateTicketService.updateTicket(req);
-                    var key = {key:'api'}
+                    var key = {key:'tasks'}
                     cacheService.deleteCache(key);
                     $window.location.href = '#/';
                 }
@@ -316,10 +373,13 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                         {
                             console.log(response.data);
                             //add ticket to user's db
-                            Auth.getUser().tasks.push({_id: response.data._id})
-                            console.log(Auth.getUser().tasks);
-                            loginService.updateUser();
-                            var key = {key:'api'}
+                            if (Auth.getUser().role!='ADMIN')
+                            {
+                                Auth.getUser().tasks.push({_id: response.data._id})
+                                console.log(Auth.getUser().tasks);
+                                loginService.updateUser();
+                            }
+                            var key = {key:'tasks'}
                             cacheService.deleteCache(key);
                             $window.location.href = '#/';
                         });

@@ -42,14 +42,19 @@ myApp.config(function ($routeProvider) {
         controller: 'CreateListController'
     })
     .when('/login', {
-        templateUrl: '/pages/loginFrag.htm',  
-        controller: 'AuthController'  
+        templateUrl: '/pages/loginFrag.htm'
+       // controller: 'AuthController'  
     })
     .when('/logout', {
         templateUrl: '/pages/loginFrag.htm'    
     })
     .when('/user/dashboard', {
         templateUrl: '/pages/user/userDashboard.htm'
+    })
+    .when('/admin/users', {
+        templateUrl: '/pages/admin/usersFrag.htm',
+        controller: 'AdminController'  
+
     })
     .otherwise({ redirectTo: '/' });
 }); 
@@ -62,16 +67,20 @@ function($rootScope, Auth, $location, $window) {
   $rootScope.$on("$locationChangeStart", function(event) {
      
       var url = $location.absUrl();
-      if (url.includes('user'))
-      {
-        if (!Auth.isLoggedIn()) {
+ 
+            console.log(Auth.getUser())
+            console.log(Auth.getUser().role)
+        if (Auth.getUser()=='UNAUTHORIZED' ) {
             console.log('DENY');
             $location.path('/login');
         }
-        else {
-            console.log('ALLOW');
-        }
-    }
+
+
+        // if (url.includes('admin') && Auth.getUser().role!='ADMIN')
+        // {
+        //   console.log('ADMIN ONLY');
+        //   $location.path('/login');
+        // }
   });
 
 }]);

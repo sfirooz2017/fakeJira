@@ -10,7 +10,7 @@ const util = require('util');
 const app = express();
 app.use(express.json());
 const bcrypt = require('bcryptjs')
-const { ensureAuthenticated, forwardAuthenticated } = require('./config/auth');
+const { ensureAuthenticated, ensureAdmin, forwardAuthenticated } = require('./config/auth');
 
 const passport = require('passport');
 mongoose.set('useFindAndModify', false);
@@ -71,9 +71,16 @@ router.post('/list/save', function(req, res){
 
 //RETRIEVE ALL
 
-router.get('/findall', function(req, res) {
+router.get('/findall', ensureAdmin, function(req, res) {
     TicketModel.find(function(err, data) {
         if(err){
+            if (err.contains(401)){
+                res.writeHead(401, {
+                    'Location': 'http://localhost:3000/#'
+                    //add other headers here...
+                  });
+                  res.end();
+            }
             console.log(err);
         }
         else{
@@ -101,9 +108,21 @@ router.get('/cache/findall', function(req, res){
 });
 
 
-router.get('/list/findall', function(req, res) {
+router.get('/list/findall', ensureAdmin, function(req, res) {
 
     ListModel.find(function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }
+    });  
+ });
+
+router.get('/users/findall', ensureAdmin, function(req, res) {
+
+    UserModel.find(function(err, data) {
         if(err){
             console.log(err);
         }
@@ -184,10 +203,22 @@ router.post('/update', function(req, res) {
 });    
 
 router.post('/user/update', function(req, res) {
-    //remove id from user list and tasks
 
     UserModel.findByIdAndUpdate(req.user.id, 
     {tasks:req.body.tasks, lists: req.body.lists}, function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send(data);
+        }
+    });  
+});
+
+router.post('/user/updateRole', ensureAdmin, function(req, res) {
+
+    UserModel.findByIdAndUpdate(req.id, 
+    {role:req.role}, function(err, data) {
         if(err){
             console.log(err);
         }
@@ -230,6 +261,11 @@ router.post('/cache/delete', function(req, res){
     res.send();
     console.log("cache deleted");
     
+});
+
+router.post('/cache/deleteAll', function(req, res){
+    cache.clear();
+    res.send();    
 });
 
 router.post('/list/delete', function(req, res) {
@@ -296,13 +332,6 @@ router.get('/logout', (req, res) => {
 
 router.get('/auth', ensureAuthenticated, (req, res) =>
   {
-      console.log("auth");
-      res.send(req.user);
-  })
-
-  router.get('/getUser', ensureAuthenticated, (req, res) =>
-  {
-      console.log("authy");
       res.send(req.user);
   })
 
