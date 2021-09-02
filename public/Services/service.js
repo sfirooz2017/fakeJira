@@ -16,8 +16,8 @@ myApp.service('loginService', ['$http', 'cacheService', 'Auth', function($http, 
         {
                 $http.post('/api/user/update', {tasks: Auth.getUser().tasks, lists: Auth.getUser().lists}).then(function(response)
                 {
-                        // var key = {key:'api'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'tasks'}
+                        cacheService.deleteCache(key);
                 })
         }
 }]);
@@ -27,6 +27,7 @@ myApp.service('userInfoService', ['$http', 'cacheService', 'Auth', function($htt
         this.deleteUser = function(id){
                 return $http.post('/api/user/delete', {id}).then(function(response)
                 {
+                        cacheService.clearCache();
                         var row = $('#' + id);
                         $('#userstable').dataTable().fnDeleteRow(row);
                        // return response;
@@ -34,6 +35,8 @@ myApp.service('userInfoService', ['$http', 'cacheService', 'Auth', function($htt
         }
 
         this.updateUserRole = function(id, role){
+                var key = {key:'users'}
+                cacheService.deleteCache(key);
                 return $http.post('/api/user/updateRole', {id, role})
         }
 
@@ -46,7 +49,7 @@ myApp.service('userInfoService', ['$http', 'cacheService', 'Auth', function($htt
 
 }]);
 
-myApp.service('createListService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
+myApp.service('listService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
       
         this.getIds = function(){
                 return $http.get('/api/findallids').then(function(response)
@@ -85,8 +88,8 @@ myApp.service('createListService', ['$http', 'cacheService', 'Auth', function($h
         this.updateList = function(list){
                 $http.post('/api/list/update', list).then(function(response)
                 {
-                        // var key = {key:'list'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
                         return response;
                 });
         }
@@ -98,11 +101,10 @@ myApp.service('createListService', ['$http', 'cacheService', 'Auth', function($h
                 {
                         var row = $('#' + id);
                         $('#listtable').dataTable().fnDeleteRow(row);
-                        // var key = {key:'list'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
                 });
         }
-
         this.createList = function(list){
                 
                 var data = {
@@ -113,15 +115,18 @@ myApp.service('createListService', ['$http', 'cacheService', 'Auth', function($h
    
                 return $http.post('/api/list/save', data).then(function(response)
                 {
-                        // var key = {key:'list'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'list'}
+                        cacheService.deleteCache(key);
 
                         return response;
                 });  
         }
+        this.deleteUserLists = function(lists){
+                $http.post('/api/lists/delete/user', {lists})
+        }
 }]);
 
-myApp.service('updateTicketService', ['$http', 'Auth', function($http, Auth) {
+myApp.service('ticketService', ['$http', 'cacheService', 'Auth', function($http, cacheService, Auth) {
 
         this.findUserTickets = function(){
                 if(Auth.getUser().role=="ADMIN")
@@ -171,30 +176,13 @@ myApp.service('updateTicketService', ['$http', 'Auth', function($http, Auth) {
         }
                 $http.post('/api/update', data).then(function(response)
                 {
-                        // var key = {key:'api'}
-                        // cacheService.deleteCache(key);
+                        var key = {key:'tasks'}
+                        cacheService.deleteCache(key);
                 })
         }
-}]);
-
-myApp.service('deleteTicketService', ['$http', 'cacheService', function($http, cacheService) {
-
-        this.deleteTicket = function(id){
-                var data = {
-                        id : id
-                };
-                $http.post('/api/delete', data).then(function(response)
-                {
-                        var row = $('#' + id);
-                        $('#dtable').dataTable().fnDeleteRow(row);
-                        // var key = {key:'api'}
-                        // cacheService.deleteCache(key);
-                });
+        this.deleteUserTickets = function(tasks){
+                $http.post('/api/tickets/delete/user', {tasks})
         }
-}]);
-
-myApp.service('newTicketService', ['$http', 'cacheService', function($http, cacheService) {
-
         this.createTicket = function(ticket){
                 var data = {
                         title : ticket.title,
@@ -204,9 +192,9 @@ myApp.service('newTicketService', ['$http', 'cacheService', function($http, cach
                 };
                 return $http.post('/api/save', data).then(function(response)
                 {
+                        var key = {key:'tasks'}
+                        cacheService.deleteCache(key);
                         return response;
-                        // var key = {key:'api'}
-                        // cacheService.deleteCache(key);
 
                         var ticket = {
                                 title : response.data.title,
@@ -221,8 +209,30 @@ myApp.service('newTicketService', ['$http', 'cacheService', function($http, cach
                 });
         
         }
-
-
+        this.deleteTicket = function(id){
+                var data = {
+                        id : id
+                };
+                $http.post('/api/delete', data).then(function(response)
+                {
+                        var row = $('#' + id);
+                        $('#dtable').dataTable().fnDeleteRow(row);
+                        var key = {key:'tasks'}
+                        cacheService.deleteCache(key);
+                });
+        }
+        this.deleteUserTicketsAll = function(id){
+                var data = {
+                        id : id
+                };
+                $http.post('/api/tasks/delete/user/all', data)
+        }
+        this.deleteUserTicketsFromList = function(id){
+                var data = {
+                        id : id
+                };
+                $http.post('/api/tasks/delete/user/list', data)
+        }
 }]);
       
 myApp.service('cacheService', ['$http', function($http) {
@@ -265,8 +275,6 @@ myApp.factory('Auth', ['commonFuncsService', function(commonFuncsService){
         return{
             setUser : function(aUser){
                 user = aUser;
-                console.log(user);
-                console.log("set");
             },
             getUser : function(){
                     if (typeof user !== 'undefined')
@@ -275,12 +283,7 @@ myApp.factory('Auth', ['commonFuncsService', function(commonFuncsService){
                     console.log("get");
                 commonFuncsService.userInfo().then(function(response)
                 {
-                       // console.log(response.data)
                   return response.data;
-                //     if (tempUser.role=='ADMIN')
-                //     {
-                //         $scope.admin=true;
-                //     }
                 });
             }
           }

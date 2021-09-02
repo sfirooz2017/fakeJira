@@ -2,9 +2,7 @@ var express = require('express');
 var app = express();
 var router = express.Router();
 const path = require('path');
-
 const passport = require('passport');
-//const flash = require('connect-flash');
 const session = require('express-session');
 
 //Passport Config
@@ -12,12 +10,6 @@ require('./config/passport')(passport);
 const { ensureAuthenticated, forwardAuthenticated } = require('./config/auth');
 
 app.use(express.static(__dirname + "/public"));
-
-//app.use('/user', ensureAuthenticated, express.static(path.join(__dirname, '/public/pages/users')));
-
-// app.get('/pages/user/*', ensureAuthenticated, (req, res) => {
-//     res.send("not allowed");
-// });
 
 app.use(express.json());
 app.use(express.urlencoded({

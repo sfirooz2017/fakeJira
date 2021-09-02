@@ -1,16 +1,21 @@
 
-myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, loginService, cacheService, commonFuncsService, Auth){
+myApp.controller('AuthController', [ '$scope', '$http', '$window', '$rootScope', 'loginService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, $rootScope, loginService, cacheService, commonFuncsService, Auth){
     $scope.admin = false;
 
     $scope.logout = function(){
+        cacheService.clearCache();
         commonFuncsService.logout().then(function(response){
             $scope.name = null;
             $scope.admin = false;
             console.log("logout");
-            cacheService.clearCache();
             $window.location.href = '#/login';
         });
     }
+
+    $rootScope.$on('appError', function(e, error) {
+        $scope.errorMessage = error.message;
+    });
+
         commonFuncsService.userInfo().then(function(response)
         {
             Auth.setUser(response.data);
@@ -22,7 +27,7 @@ myApp.controller('AuthController', [ '$scope', '$http', '$window', 'loginService
         });
 }]);
 
-myApp.controller('AdminController', [ '$scope', '$http', '$window', 'userInfoService', 'cacheService', 'commonFuncsService', 'Auth', function($scope, $http, $window, userInfoService, cacheService, commonFuncsService, Auth){
+myApp.controller('AdminController', [ '$scope', '$http', '$window', 'userInfoService', 'cacheService', 'commonFuncsService', 'ticketService', 'listService', 'Auth', function($scope, $http, $window, userInfoService, cacheService, commonFuncsService, ticketService, listService, Auth){
  
     $scope.deleteUser = function(user)
     {
@@ -30,47 +35,59 @@ myApp.controller('AdminController', [ '$scope', '$http', '$window', 'userInfoSer
             console.log("deleted");
             //put your delete method logic here
            }
-        var key = {key:'users'}
-        cacheService.deleteCache(key);
+
+        $scope.deleteUserTickets(user.tasks)
+        $scope.deleteUserLists(user.lists)
+        cacheService.clearCache();
         userInfoService.deleteUser(user._id);
     }
 
     $scope.updateUser = function(user, role)
     {
         user.role=role;
-        var key = {key:'users'}
-        cacheService.deleteCache(key);
         userInfoService.updateUserRole(user._id, role);
     }
 
-        cacheService.getCache({params: {key : "users"}})
-            .then(function(response){
-                if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
-                {
-                    
-                    userInfoService.getUsers()
-                    .then(function(response)
-                    {
-                        createTable(response.data);
-                        cacheService.createCache('users', response.data);
-                    })
-                       
-                }
-                else
-                {
-                    console.log("users cache");
-                    createTable(Object.values(response.data));
-                }
-            })
-            function createTable(data)
+    $scope.deleteUserTickets = function(tasks)
+    {
+        ticketService.deleteUserTickets(tasks)
+        //for each task id in user tasks, delete task
+    }
+
+    $scope.deleteUserLists = function(lists)
+    {
+        listService.deleteUserLists(lists)
+        //for each list id in user lists, delete list       
+    }
+
+    cacheService.getCache({params: {key : "users"}})
+        .then(function(response){
+            if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
             {
-                $scope.users = data;
-                $(document).ready(function() {
-                    $('#userstable').DataTable( {
-                        responsive: true
-                    });
-                });
+                
+                userInfoService.getUsers()
+                .then(function(response)
+                {
+                    createTable(response.data);
+                    cacheService.createCache('users', response.data);
+                })
+                    
             }
+            else
+            {
+                console.log("users cache");
+                createTable(Object.values(response.data));
+            }
+        })
+        function createTable(data)
+        {
+            $scope.users = data;
+            $(document).ready(function() {
+                $('#userstable').DataTable( {
+                    responsive: true
+                });
+            });
+        }
 }]);
 
 myApp.controller('cacheDetailsController', [ '$scope', '$http', '$routeParams', 'cacheService', function($scope, $http, $routeParams, cacheService){
@@ -82,14 +99,14 @@ myApp.controller('cacheDetailsController', [ '$scope', '$http', '$routeParams', 
 
 }]);
 
-myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$timeout', '$window', 'createListService', 'updateTicketService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $routeParams, $timeout, $window, createListService, updateTicketService, cacheService, loginService, Auth){
+myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$timeout', '$window', 'listService', 'ticketService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $routeParams, $timeout, $window, listService, ticketService, cacheService, loginService, Auth){
 
     $scope.selectedIds = new Array();
     $scope.tasks = [];
 
         $scope.init = function () {
 
-            updateTicketService.findUserTickets().then(function(response){
+            ticketService.findUserTickets().then(function(response){
                 var tickets = response.data;
         
                 tickets.forEach((tic => {
@@ -108,7 +125,7 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
     // FOR SELECTED LIST
     if ($routeParams.id != null)
     {
-        createListService.getList({id:$routeParams.id})
+        listService.getList({id:$routeParams.id})
             .then(function (response)
             {
                 $scope.title = response.data.title;
@@ -136,9 +153,7 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
                     _id: $scope.id
                 }
 
-                createListService.updateList(list)
-                var key = {key:'list'}
-                cacheService.deleteCache(key);
+                listService.updateList(list)
                 $window.location.href = '#/lists';
             }    
         } 
@@ -153,7 +168,7 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
                     $scope.selectedIds
             }
 
-            createListService.createList(list)
+            listService.createList(list)
             .then(function(response)
             {
             console.log(response.data);
@@ -164,8 +179,6 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
                 console.log(Auth.getUser().lists);
                 loginService.updateUser();
             }
-            var key = {key:'list'}
-            cacheService.deleteCache(key);
             $window.location.href = '#/lists';
             });
 
@@ -175,11 +188,11 @@ myApp.controller('CreateListController', [ '$scope', '$http', '$routeParams', '$
 
 }]);
 
-myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createListService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $routeParams, createListService, cacheService, loginService, Auth){
+myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'listService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $routeParams, listService, cacheService, loginService, Auth){
 
     $scope.deleteList = function(id)
     {
-        createListService.deleteList(id)
+        listService.deleteList(id)
         if (Auth.getUser().role!='ADMIN')
         {
             Auth.getUser().lists = Auth.getUser().lists.filter(list=>list._id !== id);
@@ -192,7 +205,7 @@ myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createL
                 if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
                 {
                     
-                    createListService.getLists()
+                    listService.getLists()
                     .then(function(response)
                     {
                         createTable(response.data);
@@ -220,7 +233,7 @@ myApp.controller('ListController', [ '$scope', '$http', '$routeParams', 'createL
 
 }]);
 
-myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTicketService', 'deleteTicketService', 'cacheService', 'createListService', 'commonFuncsService', 'loginService', 'Auth', function($scope, $http, $routeParams, updateTicketService, deleteTicketService, cacheService, createListService, commonFuncsService, loginService, Auth){
+myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'ticketService', 'cacheService', 'listService', 'commonFuncsService', 'loginService', 'Auth', function($scope, $http, $routeParams, ticketService, cacheService, listService, commonFuncsService, loginService, Auth){
 
     $scope.tickets = [];
     var list = null;
@@ -228,7 +241,7 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
     var id = {id: $routeParams.id};
 
     if($routeParams.id!=null){
-        createListService.getList(id)
+        listService.getList(id)
             .then(function(response){
                 list = response.data;
                 ids = list.tasks;
@@ -241,12 +254,20 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
     }
     $scope.rowClick = function(id){
 
-        deleteTicketService.deleteTicket(id);
+        ticketService.deleteTicket(id);
+        //Remove ticket from list
+        ticketService.deleteUserTicketsFromList(id);
         if (Auth.getUser().role!='ADMIN')
         {
             Auth.getUser().tasks = Auth.getUser().tasks.filter(task=>task._id !== id);
             console.log(Auth.getUser().tasks);
             loginService.updateUser();
+        }
+        else
+        {
+            //Remove task from all users with that task
+            ticketService.deleteUserTicketsAll(id);
+
         }
     }
 
@@ -277,7 +298,7 @@ myApp.controller('AppController', ['$scope', '$http', '$routeParams', 'updateTic
             .then(function(response){
                 if (Object.keys(response.data).length===0) //converts response to array, then checks if array is not empty
                 {
-                    updateTicketService.findUserTickets().then(function(response){
+                    ticketService.findUserTickets().then(function(response){
                         createTable(response.data);
                         cacheService.createCache('tasks', response.data);
                     });
@@ -319,7 +340,7 @@ myApp.controller('CacheController', ['$scope', 'cacheService', function($scope, 
     }
 }]);
 
-myApp.controller('createTicketController', ['$scope', '$http', '$window','$routeParams', 'commonFuncsService', 'newTicketService', 'updateTicketService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $window, $routeParams, commonFuncsService, newTicketService, updateTicketService, cacheService, loginService, Auth){
+myApp.controller('createTicketController', ['$scope', '$http', '$window','$routeParams', 'commonFuncsService', 'ticketService', 'cacheService', 'loginService', 'Auth', function($scope, $http, $window, $routeParams, commonFuncsService, ticketService, cacheService, loginService, Auth){
 
     $scope.validDate = commonFuncsService.validDate;
 
@@ -327,7 +348,7 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
 
         if($routeParams.id)
         {  
-            updateTicketService.findTicket($routeParams.id)
+            ticketService.findTicket($routeParams.id)
                 .then(function(ticket){
                     $scope.ticket = ticket;
                     switch (ticket.status)
@@ -356,9 +377,7 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                         "due": $scope.ticket.due,
                         "status": $scope.ticket.status
                     }
-                    updateTicketService.updateTicket(req);
-                    var key = {key:'tasks'}
-                    cacheService.deleteCache(key);
+                    ticketService.updateTicket(req);
                     $window.location.href = '#/';
                 }
             }
@@ -376,7 +395,7 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                         "due": $scope.ticket.due,
                         "status": $scope.ticket.status
                     }
-                    newTicketService.createTicket(req)
+                    ticketService.createTicket(req)
                         .then(function(response)
                         {
                             console.log(response.data);
@@ -387,8 +406,6 @@ myApp.controller('createTicketController', ['$scope', '$http', '$window','$route
                                 console.log(Auth.getUser().tasks);
                                 loginService.updateUser();
                             }
-                            var key = {key:'tasks'}
-                            cacheService.deleteCache(key);
                             $window.location.href = '#/';
                         });
 

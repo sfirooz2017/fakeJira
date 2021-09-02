@@ -43,7 +43,9 @@ myApp.config(function ($routeProvider) {
     })
     .when('/login', {
         templateUrl: '/pages/loginFrag.htm'
-       // controller: 'AuthController'  
+    })
+    .when('/register', {
+        templateUrl: '/pages/registerFrag.htm'
     })
     .when('/logout', {
         templateUrl: '/pages/loginFrag.htm'    
@@ -59,7 +61,7 @@ myApp.config(function ($routeProvider) {
     .otherwise({ redirectTo: '/' });
 }
 );
-myApp.factory('authHttpResponseInterceptor',['$q','$location',function($q,$location){
+myApp.factory('authHttpResponseInterceptor',['$q','$location', '$rootScope',function($q,$location, $rootScope){
 	return {
 		response: function(response){
 			if (response.status === 401) {
@@ -69,11 +71,13 @@ myApp.factory('authHttpResponseInterceptor',['$q','$location',function($q,$locat
 		},
 		responseError: function(rejection) {
 			if (rejection.status === 401) {
+                $rootScope.$emit("appError", new Error("Error: You must log in to see this page."));
 				console.log("Response Error 401",rejection);
 				$location.path('/login');
 			}
-            if (rejection.status === 402) {
-				console.log("Response Error 402",rejection);
+            if (rejection.status === 403) {
+                //$rootScope.$emit("appError", new Error("Error: Admin access only."));
+				console.log("Response Error 403",rejection);
 				$location.path('/');
 			}
 			return $q.reject(rejection);

@@ -10,7 +10,7 @@ const util = require('util');
 const app = express();
 app.use(express.json());
 const bcrypt = require('bcryptjs')
-const { ensureAuthenticated, ensureAdmin, forwardAuthenticated } = require('./config/auth');
+const { ensureAuthenticated, ensureAdmin, ensureUser } = require('./config/auth');
 
 const passport = require('passport');
 mongoose.set('useFindAndModify', false);
@@ -100,7 +100,6 @@ router.get('/cache/findall', ensureAuthenticated, function(req, res){
     res.send(r);
 });
 
-
 router.get('/list/findall', ensureAdmin, function(req, res) {
 
     ListModel.find(function(err, data) {
@@ -147,7 +146,7 @@ router.get('/user/list/findall', ensureAuthenticated, function(req, res) {
 
 //RETRIEVE ONE
 
-router.get('/find', ensureAuthenticated, function(req, res) {
+router.get('/find', ensureUser, function(req, res) {
     TicketModel.findById((req.query.id), 
     function(err, data) {
         if(err){
@@ -164,7 +163,7 @@ router.get('/cache/find', ensureAuthenticated, function(req, res){
     res.send(result);
 });
 
-router.get('/list/find', ensureAuthenticated, function(req, res) {
+router.get('/list/find', ensureUser, function(req, res) {
     ListModel.findById((req.query.id), 
     function(err, data) {
         if(err){
@@ -247,6 +246,32 @@ router.post('/delete', ensureAuthenticated, function(req, res) {
     });  
 });
 
+router.post('/tickets/delete/user', ensureAdmin, function(req, res) {
+    TicketModel.deleteMany({_id: {$in :req.body.tasks}}, 
+    function(err, data) {
+        if(err){
+            res.send(err);
+            console.log(err);
+        }
+        else{
+            res.send("Data Deleted!");
+        }
+    });  
+});
+
+router.post('/lists/delete/user', ensureAdmin, function(req, res) {
+    ListModel.deleteMany({_id: {$in :req.body.lists}}, 
+    function(err, data) {
+        if(err){
+            res.send(err);
+            console.log(err);
+        }
+        else{
+            res.send("Data Deleted!");
+        }
+    });  
+});
+
 router.post('/user/delete', ensureAdmin, function(req, res) {
     UserModel.findByIdAndDelete((req.body.id), 
     function(err, data) {
@@ -284,7 +309,47 @@ router.post('/list/delete', ensureAuthenticated, function(req, res) {
         }
     });  
 });
+router.post('/tasks/delete/user/list', ensureAuthenticated, function(req, res) {
+    //if a ticket is deleted, update all list
+    console.log(req.body.id + " id")
+       // UserModel.updateMany({ "$pull": { "tasks": { "_id": req.body.id } }}, { safe: true, multi:true }, 
+        ListModel.updateMany({"tasks._id" : req.body.id}, {$pull: { tasks: { _id : req.body.id}}},
+       function(err, data) {
+            if(err){
+                console.log(err);
+            }
+            else{
+                res.send("Data Deleted!");
+            }
+        }); 
+    });
+router.post('/tasks/delete/user/all', ensureAdmin, function(req, res) {
+//if admin deletes a list, remove it from all users
+console.log(req.body.id + " id")
 
+   // UserModel.updateMany({ "$pull": { "tasks": { "_id": req.body.id } }}, { safe: true, multi:true }, 
+    UserModel.updateOne({"tasks._id" : req.body.id}, {$pull: { tasks: { _id : req.body.id}}},
+   function(err, data) {
+        if(err){
+            console.log(err);
+        }
+        else{
+            res.send("Data Deleted!");
+        }
+    }); 
+});
+router.post('/lists/delete/user/all', ensureAdmin, function(req, res) {
+    //if admin deletes a list, remove it from all users
+    UserModel.updateOne({"lists._id" : req.body.id}, {$pull: { lists: { _id : req.body.id}}},
+        function(err, data) {
+            if(err){
+                console.log(err);
+            }
+            else{
+                res.send("Data Deleted!");
+            }
+        }); 
+    });
     //AUTH
 
 router.post('/register', function(req, res) {
@@ -334,7 +399,7 @@ router.get('/logout', (req, res) => {
     res.send();
 })
 
-router.get('/auth', ensureAuthenticated, (req, res) =>
+router.get('/auth', (req, res) =>
   {
       res.send(req.user);
   })
